@@ -5,7 +5,7 @@
 #   make clean  -> hapus hasil kompilasi
 
 # Identitas kelompok 
-XX       ?= 00
+XX       ?= 10
 
 # Compiler 
 CC       ?= gcc
