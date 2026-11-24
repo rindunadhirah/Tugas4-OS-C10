@@ -1,0 +1,21 @@
+; Varian 6 — penulisan sekuensial sebagai pembanding WAF.
+; Jalankan dari run_all.sh, misalnya:
+;   fio seq_write.fio --directory="$MNT" --output="$LOG" --output-format=normal
+;
+; File kerja dibatasi 16 MiB dan penulisan berulang sampai total I/O
+; logis aplikasi mencapai 50 MiB.
+
+[global]
+ioengine=sync
+direct=0
+rw=write
+bs=4k
+size=16m
+io_size=50m
+numjobs=1
+time_based=0
+end_fsync=1
+group_reporting=1
+
+[seq_write_4k]
+filename=fio-seq-write.dat
