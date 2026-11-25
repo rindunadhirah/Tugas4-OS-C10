@@ -16,10 +16,10 @@ LDLIBS   ?=
 
 BUILD    := build
 
-# Modul bersama 
-COMMON_SRC := iolib.c banner.c
-COMMON_OBJ := $(COMMON_SRC:%.c=$(BUILD)/%.o)
-HEADERS    := iolib.h banner.h
+# Modul bersama. iolib saat ini berada di direktori utama repo, sedangkan
+# banner dan workload berada di src/.
+COMMON_OBJ := $(BUILD)/iolib.o $(BUILD)/banner.o
+HEADERS    := ../iolib.h banner.h
 
 # Program utama. Varian 6 hanya memakai skrip + fio, jadi cukup workload.
 # Kalau nanti ada program C lain, tambahkan namanya di sini.
@@ -52,6 +52,9 @@ $(BUILD):
 
 $(BUILD)/%.o: %.c $(HEADERS) | $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/iolib.o: ../iolib.c ../iolib.h | $(BUILD)
+	$(CC) $(CFLAGS) -c ../iolib.c -o $@
 
 $(BUILD)/%: $(BUILD)/%.o $(COMMON_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
