@@ -1,6 +1,6 @@
 #include "banner.h"
 
-#include "../iolib.h"
+#include "iolib.h"
 
 void banner_print(void)
 {

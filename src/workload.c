@@ -1,7 +1,7 @@
 #define _FILE_OFFSET_BITS 64
 #define _POSIX_C_SOURCE 200809L
 
-#include "../iolib.h"
+#include "iolib.h"
 #include "banner.h"
 
 #include <errno.h>
