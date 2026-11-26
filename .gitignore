@@ -1,3 +1,4 @@
 src/build/
 *.img
 work_a/
+.vscode/
