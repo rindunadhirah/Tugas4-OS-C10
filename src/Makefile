@@ -30,7 +30,7 @@ BINS     := $(PROGRAMS:%=$(BUILD)/%)
 DIR_A  ?= ../work_a
 DIR_B  ?= /mnt/lab
 SIZE   ?= 256
-SIZE_B ?= 32
+SIZE_B ?= 16
 BS     ?= 4
 MODE   ?= seqwrite
 # Perangkat blok di bawah DIR_A (mis. sda2), dideteksi otomatis
