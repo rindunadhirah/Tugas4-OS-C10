@@ -7,14 +7,8 @@ mount_dir=/mnt/lab
 image="$PWD/lab_disk.img"
 log_dir=../logs
 timestamp=$(date +%Y%m%d-%H%M%S)
-RUNS=${RUNS:-3}
 mkdir -p "$log_dir"
 csv="$log_dir/C10-waf-$timestamp.csv"
-
-if ! [[ "$RUNS" =~ ^[1-9][0-9]*$ ]]; then
-    echo "ERROR: RUNS harus bilangan bulat positif." >&2
-    exit 1
-fi
 
 # Jangan melepas mount yang bukan milik image lab
 check_mount() {
@@ -28,7 +22,7 @@ check_mount() {
 }
 
 # Header CSV
-echo 'run_id,experiment,filesystem,workload,logical_bytes,kbytes_before,kbytes_after,sectors_before,sectors_after,fs_written_bytes,block_written_bytes,fs_waf,block_waf' > "$csv"
+echo 'experiment,filesystem,workload,logical_bytes,kbytes_before,kbytes_after,sectors_before,sectors_after,fs_written_bytes,block_written_bytes,fs_waf,block_waf' > "$csv"
 
 # Mengambil io_size dari konfigurasi fio
 get_io_size() {
@@ -38,29 +32,11 @@ get_io_size() {
 }
 
 # Menjalankan eksperimen pada satu filesystem
-save_env() {
-    local filesystem=$1 loop=$2
-    local env_file="$log_dir/C10-env-$timestamp.txt"
-
-    {
-        echo "Kernel : $(uname -r)"
-        awk '/MemTotal:/ { printf "RAM : %.1f GB\\n", $2 / 1024 / 1024; exit }' /proc/meminfo
-        echo "Media : $mount_dir ($(findmnt -rno SOURCE,FSTYPE,SIZE -T "$mount_dir")) [dev=$loop]"
-        echo "vm.dirty_ratio : $(cat /proc/sys/vm/dirty_ratio)"
-        echo "vm.dirty_background_ratio : $(cat /proc/sys/vm/dirty_background_ratio)"
-        echo "Read-ahead : $(cat "/sys/block/$loop/queue/read_ahead_kb") kB"
-        echo "Runs per scenario : $RUNS"
-        echo "lsblk :"
-        lsblk
-    } > "$env_file"
-    echo "Spesifikasi lingkungan disimpan di $env_file"
-}
-
 run_test() {
-    local run_id=$1 filesystem=$2 fio_file=$3 experiment=$4
+    local filesystem=$1 fio_file=$2 experiment=$3
     local virtual_disk loop kbytes_before kbytes_after sectors_before sectors_after
     local written_bytes written_sectors written_bytes_sector_level fs_waf block_waf waf
-    local fio_log="$log_dir/C10-fio-run${run_id}-$experiment-$filesystem-$timestamp.txt"
+    local fio_log="$log_dir/C10-fio-$experiment-$filesystem-$timestamp.txt"
 
     # Format & mount menggunakan skrip kelompok
     check_mount
@@ -73,11 +49,6 @@ run_test() {
         exit 1
     fi
     loop=${virtual_disk#/dev/}
-
-    # Satu file env mendokumentasikan host dan Media B untuk seluruh sesi ini.
-    if [[ ! -f "$log_dir/C10-env-$timestamp.txt" ]]; then
-        save_env "$filesystem" "$loop"
-    fi
 
     # Sebelum
     sync
@@ -114,25 +85,21 @@ run_test() {
     echo "WAF $filesystem: $waf"
 
     # Simpan kedua level WAF untuk analisis laporan
-    echo "$run_id,$experiment,$filesystem,$fio_file,$io_size,$kbytes_before,$kbytes_after,$sectors_before,$sectors_after,$written_bytes,$written_bytes_sector_level,$fs_waf,$block_waf" >> "$csv"
+    echo "$experiment,$filesystem,$fio_file,$io_size,$kbytes_before,$kbytes_after,$sectors_before,$sectors_after,$written_bytes,$written_bytes_sector_level,$fs_waf,$block_waf" >> "$csv"
 }
 
-for ((run_id = 1; run_id <= RUNS; run_id++)); do
-    echo "===== Pengulangan $run_id/$RUNS ====="
+# EKSPERIMEN A
+echo "EKSPERIMEN A"
+get_io_size rand_write.fio
+echo "Byte Logis: $io_size"
+run_test ext4 rand_write.fio A
+run_test f2fs rand_write.fio A
 
-    # EKSPERIMEN A
-    echo "EKSPERIMEN A"
-    get_io_size rand_write.fio
-    echo "Byte Logis: $io_size"
-    run_test "$run_id" ext4 rand_write.fio A
-    run_test "$run_id" f2fs rand_write.fio A
+# EKSPERIMEN B
+echo "EKSPERIMEN B"
+get_io_size seq_write.fio
+echo "Byte Logis: $io_size"
+run_test ext4 seq_write.fio B
+run_test f2fs seq_write.fio B
 
-    # EKSPERIMEN B
-    echo "EKSPERIMEN B"
-    get_io_size seq_write.fio
-    echo "Byte Logis: $io_size"
-    run_test "$run_id" ext4 seq_write.fio B
-    run_test "$run_id" f2fs seq_write.fio B
-done
-
-echo "Hasil $RUNS pengulangan per skenario disimpan di $csv"
+echo "Hasil disimpan di $csv"
