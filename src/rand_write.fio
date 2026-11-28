@@ -1,4 +1,4 @@
-; Varian 6 — penulisan acak untuk pengukuran write amplification.
+; Varian 6 — penulisan acak O_DIRECT untuk pengukuran write amplification.
 ; Jalankan dari run_all.sh, misalnya:
 ;   fio rand_write.fio --directory="$MNT" --output="$LOG" --output-format=normal
 ;
@@ -7,7 +7,7 @@
 
 [global]
 ioengine=sync
-direct=0
+direct=1
 rw=randwrite
 bs=4k
 size=16m
@@ -17,5 +17,5 @@ time_based=0
 end_fsync=1
 group_reporting=1
 
-[rand_write_4k]
+[rand_write_direct_4k]
 filename=fio-rand-write.dat

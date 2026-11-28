@@ -1,4 +1,4 @@
-; Varian 6 — penulisan sekuensial sebagai pembanding WAF.
+; Varian 6 — penulisan sekuensial O_DIRECT sebagai pembanding WAF.
 ; Jalankan dari run_all.sh, misalnya:
 ;   fio seq_write.fio --directory="$MNT" --output="$LOG" --output-format=normal
 ;
@@ -7,7 +7,7 @@
 
 [global]
 ioengine=sync
-direct=0
+direct=1
 rw=write
 bs=4k
 size=16m
@@ -17,5 +17,5 @@ time_based=0
 end_fsync=1
 group_reporting=1
 
-[seq_write_4k]
+[seq_write_direct_4k]
 filename=fio-seq-write.dat
